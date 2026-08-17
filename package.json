@@ -1,0 +1,17 @@
+{
+    "name":  "julio-vera-palacios-landing",
+    "version":  "1.0.0",
+    "private":  true,
+    "description":  "Landing profesional de Julio Humberto Vera Palacios",
+    "scripts":  {
+                    "dev":  "http-server . -p 8080 -c-1 -o",
+                    "serve":  "http-server . -p 8080 -c-1 -o",
+                    "check":  "node scripts/qa-v2.mjs \u0026\u0026 node --check js/cinematic-v2.js"
+                },
+    "dependencies":  {
+                         "gsap":  "^3.15.0"
+                     },
+    "devDependencies":  {
+                            "http-server":  "^14.1.1"
+                        }
+}

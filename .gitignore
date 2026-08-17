@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Backups and temporary files
+.motion-backups/
+.video-v2-backups/
+*.backup.*
+*.log
+.DS_Store
+Thumbs.db
