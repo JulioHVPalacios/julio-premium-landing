@@ -11,24 +11,51 @@
   const nav = qs('[data-nav]');
   const menuBtn = qs('.mobile-menu-btn');
   const mobileNav = qs('#mobile-nav');
+  const mobileCloseBtn = qs('#mobile-close-btn');
+
+  const openMobileMenu = () => {
+    if (!mobileNav || !menuBtn) return;
+    menuBtn.setAttribute('aria-expanded', 'true');
+    menuBtn.textContent = 'Cerrar ✕';
+    mobileNav.hidden = false;
+    // slight RAF to ensure transition triggers
+    requestAnimationFrame(() => {
+      mobileNav.classList.add('is-open');
+    });
+    document.body.style.overflow = 'hidden';
+    if (nav) nav.classList.remove('is-hidden');
+  };
+
+  const closeMobileMenu = () => {
+    if (!mobileNav || !menuBtn) return;
+    menuBtn.setAttribute('aria-expanded', 'false');
+    menuBtn.textContent = 'Menú';
+    mobileNav.classList.remove('is-open');
+    setTimeout(() => {
+      if (!mobileNav.classList.contains('is-open')) {
+        mobileNav.hidden = true;
+      }
+    }, 320);
+    document.body.style.overflow = '';
+  };
 
   if (menuBtn && mobileNav) {
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const open = menuBtn.getAttribute('aria-expanded') === 'true';
-      menuBtn.setAttribute('aria-expanded', String(!open));
-      menuBtn.textContent = !open ? 'Cerrar ✕' : 'Menú';
-      mobileNav.hidden = open;
-      mobileNav.classList.toggle('is-open', !open);
-      document.body.style.overflow = !open ? 'hidden' : '';
-      if (!open && nav) nav.classList.remove('is-hidden');
+      const isOpen = mobileNav.classList.contains('is-open');
+      if (isOpen) closeMobileMenu();
+      else openMobileMenu();
     });
+
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMobileMenu();
+      });
+    }
+
     qsa('a', mobileNav).forEach(a => a.addEventListener('click', () => {
-      menuBtn.setAttribute('aria-expanded', 'false');
-      menuBtn.textContent = 'Menú';
-      mobileNav.hidden = true;
-      mobileNav.classList.remove('is-open');
-      document.body.style.overflow = '';
+      closeMobileMenu();
     }));
   }
 
