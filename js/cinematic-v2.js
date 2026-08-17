@@ -13,15 +13,19 @@
   const mobileNav = qs('#mobile-nav');
 
   if (menuBtn && mobileNav) {
-    menuBtn.addEventListener('click', () => {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const open = menuBtn.getAttribute('aria-expanded') === 'true';
       menuBtn.setAttribute('aria-expanded', String(!open));
+      menuBtn.textContent = !open ? 'Cerrar ✕' : 'Menú';
       mobileNav.hidden = open;
       mobileNav.classList.toggle('is-open', !open);
       document.body.style.overflow = !open ? 'hidden' : '';
+      if (!open && nav) nav.classList.remove('is-hidden');
     });
     qsa('a', mobileNav).forEach(a => a.addEventListener('click', () => {
       menuBtn.setAttribute('aria-expanded', 'false');
+      menuBtn.textContent = 'Menú';
       mobileNav.hidden = true;
       mobileNav.classList.remove('is-open');
       document.body.style.overflow = '';
@@ -33,8 +37,11 @@
     const y = scrollY;
     const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
     if (progress) progress.style.transform = `scaleY(${Math.min(1, y / max)})`;
-    if (nav && y > 160) nav.classList.toggle('is-hidden', y > lastY && y - lastY > 2);
-    else nav?.classList.remove('is-hidden');
+    if (nav && y > 160 && (!mobileNav || !mobileNav.classList.contains('is-open'))) {
+      nav.classList.toggle('is-hidden', y > lastY && y - lastY > 2);
+    } else if (nav) {
+      nav.classList.remove('is-hidden');
+    }
     lastY = y;
   };
   addEventListener('scroll', onScrollBase, { passive: true });
@@ -411,15 +418,40 @@
     let rmouse = { x: (showcaseSec.offsetWidth || window.innerWidth) * 0.5, y: (showcaseSec.offsetHeight || 600) * 0.5 };
     let rsmooth = { x: (showcaseSec.offsetWidth || window.innerWidth) * 0.5, y: (showcaseSec.offsetHeight || 600) * 0.5 };
 
+    let isShowcaseVisible = true;
+    const showcaseObs = new IntersectionObserver((entries) => {
+      isShowcaseVisible = entries[0].isIntersecting;
+    }, { threshold: 0.05 });
+    showcaseObs.observe(showcaseSec);
+
+    let lastMaskX = -999;
+    let lastMaskY = -999;
+
     showcaseSec.addEventListener('mousemove', (e) => {
       const rect = showcaseSec.getBoundingClientRect();
       rmouse.x = e.clientX - rect.left;
       rmouse.y = e.clientY - rect.top;
     }, { passive: true });
 
+    showcaseSec.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+        const rect = showcaseSec.getBoundingClientRect();
+        rmouse.x = e.touches[0].clientX - rect.left;
+        rmouse.y = e.touches[0].clientY - rect.top;
+      }
+    }, { passive: true });
+
     const loopSpotlight = () => {
-      rsmooth.x += (rmouse.x - rsmooth.x) * 0.1;
-      rsmooth.y += (rmouse.y - rsmooth.y) * 0.1;
+      requestAnimationFrame(loopSpotlight);
+      if (!isShowcaseVisible) return;
+
+      rsmooth.x += (rmouse.x - rsmooth.x) * 0.12;
+      rsmooth.y += (rmouse.y - rsmooth.y) * 0.12;
+
+      const dist = Math.hypot(rsmooth.x - lastMaskX, rsmooth.y - lastMaskY);
+      if (dist < 0.3) return;
+      lastMaskX = rsmooth.x;
+      lastMaskY = rsmooth.y;
 
       rctx.clearRect(0, 0, revealCanvas.width, revealCanvas.height);
 
@@ -441,8 +473,6 @@
       revealImg.style.maskImage = 'url(' + dataUrl + ')';
       revealImg.style.webkitMaskSize = '100% 100%';
       revealImg.style.maskSize = '100% 100%';
-
-      requestAnimationFrame(loopSpotlight);
     };
     requestAnimationFrame(loopSpotlight);
   }
